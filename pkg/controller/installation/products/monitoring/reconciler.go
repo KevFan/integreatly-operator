@@ -92,12 +92,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, inst *integreatlyv1alpha1.In
 				logrus.Infof("Phase: Monitoring ReconcileFinalizer try delete blackboxtarget %s", bbt.Name)
 				b := &monitoring_v1alpha1.BlackboxTarget{}
 				err = serverClient.Get(ctx, pkgclient.ObjectKey{Name: bbt.Name, Namespace: r.Config.GetNamespace()}, b)
+				if kerrors.IsNotFound(err) {
+					continue
+				}
 				if err != nil {
 					return integreatlyv1alpha1.PhaseFailed, err
 				}
 
 				err = serverClient.Delete(ctx, b)
-				if err != nil {
+				if err != nil && !kerrors.IsNotFound(err) {
 					return integreatlyv1alpha1.PhaseFailed, err
 				}
 			}
@@ -114,7 +117,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, inst *integreatlyv1alpha1.In
 			if m.DeletionTimestamp == nil {
 				logrus.Infof("Phase: Monitoring ReconcileFinalizer delete ApplicationMonitoring CR")
 				err = serverClient.Delete(ctx, m)
-				if err != nil {
+				if err != nil && !kerrors.IsNotFound(err) {
 					return integreatlyv1alpha1.PhaseFailed, err
 				}
 			}
