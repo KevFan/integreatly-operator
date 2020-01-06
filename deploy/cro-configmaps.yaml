@@ -10,7 +10,7 @@ objects:
       namespace: ${INSTALLATION_NAMESPACE}
     data:
       managed: >
-        {"blobstorage":"openshift", "smtpcredentials":"openshift", "redis":"openshift", "postgres":"openshift"}
+        {"blobstorage":"aws", "smtpcredentials":"aws", "redis":"aws", "postgres":"aws"}
       workshop: >
         {"blobstorage":"openshift", "smtpcredentials":"openshift", "redis":"openshift", "postgres":"openshift"}
 parameters:

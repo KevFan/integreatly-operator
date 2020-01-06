@@ -219,7 +219,7 @@ func reconcileCronjob(ctx context.Context, serverClient pkgclient.Client, config
 							Containers: []corev1.Container{
 								{
 									Name:            "backup-cronjob",
-									Image:           "quay.io/omatskiv/backup-container:latest", //FIXME - workaround until we merge https://github.com/integr8ly/backup-container-image/pull/53
+									Image:           "quay.io/kevfan/backup-container:latest", //FIXME - workaround until we merge https://github.com/integr8ly/backup-container-image/pull/53
 									ImagePullPolicy: "Always",
 									Command: []string{
 										"/opt/intly/tools/entrypoint.sh",
