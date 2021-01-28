@@ -3,6 +3,7 @@ package marketplace
 import (
 	"context"
 	"fmt"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
 	"reflect"
 
@@ -13,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type ConfigMapCatalogSourceReconciler struct {
@@ -38,23 +38,23 @@ func (r *ConfigMapCatalogSourceReconciler) CatalogSourceName() string {
 	return r.CSName
 }
 
-func (r *ConfigMapCatalogSourceReconciler) Reconcile(ctx context.Context) (reconcile.Result, error) {
+func (r *ConfigMapCatalogSourceReconciler) Reconcile(ctx context.Context) (integreatlyv1alpha1.StatusPhase, error) {
 	configMapData, err := GenerateRegistryConfigMapFromManifest(r.ManifestsProductDirectory)
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to generated config map data from manifest: %w", err)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("Failed to generated config map data from manifest: %w", err)
 	}
 
 	configMapName, err := r.reconcileRegistryConfigMap(ctx, configMapData)
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to reconcile config map for registry: %w", err)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("Failed to reconcile config map for registry: %w", err)
 	}
 
-	res, err := r.reconcileCatalogSource(ctx, configMapName)
+	phase, err := r.reconcileCatalogSource(ctx, configMapName)
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to reconcile catalog source for registry: %w", err)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("Failed to reconcile catalog source for registry: %w", err)
 	}
 
-	return res, nil
+	return phase, nil
 }
 
 func (r *ConfigMapCatalogSourceReconciler) reconcileRegistryConfigMap(ctx context.Context, configMapData map[string]string) (string, error) {
@@ -95,7 +95,7 @@ func (r *ConfigMapCatalogSourceReconciler) reconcileRegistryConfigMap(ctx contex
 	return configMapName, nil
 }
 
-func (r *ConfigMapCatalogSourceReconciler) reconcileCatalogSource(ctx context.Context, configMapName string) (reconcile.Result, error) {
+func (r *ConfigMapCatalogSourceReconciler) reconcileCatalogSource(ctx context.Context, configMapName string) (integreatlyv1alpha1.StatusPhase, error) {
 	log.Infof("Reconciling registry catalog source", l.Fields{"ns": r.Namespace})
 
 	catalogSource := &coreosv1alpha1.CatalogSource{
@@ -117,7 +117,7 @@ func (r *ConfigMapCatalogSourceReconciler) reconcileCatalogSource(ctx context.Co
 		return nil
 	})
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("failed to create/update registry catalog source for namespace '%s': %w", r.Namespace, err)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("failed to create/update registry catalog source for namespace '%s': %w", r.Namespace, err)
 	}
 
 	switch or {
@@ -128,10 +128,15 @@ func (r *ConfigMapCatalogSourceReconciler) reconcileCatalogSource(ctx context.Co
 	case controllerutil.OperationResultNone:
 		break
 	default:
-		return reconcile.Result{}, fmt.Errorf("Unknown controllerutil.OperationResult '%v'", or)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("Unknown controllerutil.OperationResult '%v'", or)
 	}
 
 	log.Infof("Successfully reconciled registry catalog source", l.Fields{"ns": r.Namespace})
 
-	return reconcile.Result{}, nil
+	if catalogSource != nil && (catalogSource.Status.GRPCConnectionState == nil || catalogSource.Status.GRPCConnectionState.LastObservedState != "READY") {
+		log.Infof("Waiting for catalog source to become ready", l.Fields{"ns": r.Namespace})
+		return integreatlyv1alpha1.PhaseAwaitingOperatorSource, nil
+	}
+
+	return integreatlyv1alpha1.PhaseCompleted, nil
 }

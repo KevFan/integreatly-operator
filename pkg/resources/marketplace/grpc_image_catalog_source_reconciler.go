@@ -3,13 +3,13 @@ package marketplace
 import (
 	"context"
 	"fmt"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
 	coreosv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type GRPCImageCatalogSourceReconciler struct {
@@ -32,7 +32,7 @@ func NewGRPCImageCatalogSourceReconciler(image string, client client.Client, nam
 	}
 }
 
-func (r *GRPCImageCatalogSourceReconciler) Reconcile(ctx context.Context) (reconcile.Result, error) {
+func (r *GRPCImageCatalogSourceReconciler) Reconcile(ctx context.Context) (integreatlyv1alpha1.StatusPhase, error) {
 	r.Log.Infof("Reconciling registry catalog source for namespace", l.Fields{"ns": r.Namespace})
 
 	catalogSource := &coreosv1alpha1.CatalogSource{
@@ -54,7 +54,7 @@ func (r *GRPCImageCatalogSourceReconciler) Reconcile(ctx context.Context) (recon
 		return nil
 	})
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("failed to create/update registry catalog source for namespace '%s': %w", r.Namespace, err)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("failed to create/update registry catalog source for namespace '%s': %w", r.Namespace, err)
 	}
 
 	switch or {
@@ -65,12 +65,12 @@ func (r *GRPCImageCatalogSourceReconciler) Reconcile(ctx context.Context) (recon
 	case controllerutil.OperationResultNone:
 		break
 	default:
-		return reconcile.Result{}, fmt.Errorf("Unknown controllerutil.OperationResult '%v'", or)
+		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("Unknown controllerutil.OperationResult '%v'", or)
 	}
 
 	r.Log.Infof("Successfully reconciled registry catalog source", l.Fields{"ns": r.Namespace})
 
-	return reconcile.Result{}, nil
+	return integreatlyv1alpha1.PhaseCompleted, nil
 }
 
 func (r *GRPCImageCatalogSourceReconciler) CatalogSourceName() string {

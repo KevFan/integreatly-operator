@@ -3,9 +3,11 @@ package marketplace
 import (
 	"context"
 	"errors"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
 	"testing"
 
+	moqclient "github.com/integr8ly/integreatly-operator/pkg/client"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,9 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	moqclient "github.com/integr8ly/integreatly-operator/pkg/client"
 
 	coreosv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -38,14 +37,14 @@ func TestGRPCImageCatalogSourceReconcilerReconcile(t *testing.T) {
 		FakeClient               k8sclient.Client
 		DesiredGRPCImage         string
 		DesiredCatalogSourceName string
-		Verify                   func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client)
+		Verify                   func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client)
 	}{
 		{
 			Name:                     "Test catalog source created successfully",
 			FakeClient:               fake.NewFakeClientWithScheme(buildGRPCImageCatalogSourceReconcilerTestScheme()),
 			DesiredGRPCImage:         "example-grpcimage",
 			DesiredCatalogSourceName: "example-catalogsourcename",
-			Verify: func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client) {
+			Verify: func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client) {
 				if err != nil {
 					t.Fatalf("Unexpected error %v", err)
 				}
@@ -81,7 +80,7 @@ func TestGRPCImageCatalogSourceReconcilerReconcile(t *testing.T) {
 			}),
 			DesiredGRPCImage:         "desiredRandomGRPCImage",
 			DesiredCatalogSourceName: "registry-cs-" + testNameSpace,
-			Verify: func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client) {
+			Verify: func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client) {
 				if err != nil {
 					t.Fatalf("Unexpected error %v", err)
 				}
@@ -107,7 +106,7 @@ func TestGRPCImageCatalogSourceReconcilerReconcile(t *testing.T) {
 			},
 			DesiredGRPCImage:         "dummygrpcimage",
 			DesiredCatalogSourceName: "example-catalogsourcename",
-			Verify: func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client) {
+			Verify: func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client) {
 				if err == nil {
 					t.Fatalf("Expected error but got none")
 				}
@@ -125,7 +124,7 @@ func TestGRPCImageCatalogSourceReconcilerReconcile(t *testing.T) {
 			},
 			DesiredGRPCImage:         "dummygrpcimage",
 			DesiredCatalogSourceName: "example-catalogsourcename",
-			Verify: func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client) {
+			Verify: func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client) {
 				if err == nil {
 					t.Fatalf("Expected error but got none")
 				}
@@ -143,7 +142,7 @@ func TestGRPCImageCatalogSourceReconcilerReconcile(t *testing.T) {
 			},
 			DesiredGRPCImage:         "dummygrpcimage",
 			DesiredCatalogSourceName: "example-catalogsourcename",
-			Verify: func(desiredCSName string, desiredGRPCImage string, res reconcile.Result, err error, c k8sclient.Client) {
+			Verify: func(desiredCSName string, desiredGRPCImage string, res integreatlyv1alpha1.StatusPhase, err error, c k8sclient.Client) {
 				if err == nil {
 					t.Fatalf("Expected error but got none")
 				}

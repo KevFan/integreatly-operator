@@ -169,9 +169,9 @@ func TestReconciler_config(t *testing.T) {
 			ExpectError:    true,
 			Installation:   &integreatlyv1alpha1.RHMI{},
 			FakeMPM: &marketplace.MarketplaceInterfaceMock{
-				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy operatorsv1alpha1.Approval, catalogSourceReconciler marketplace.CatalogSourceReconciler) error {
+				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy operatorsv1alpha1.Approval, catalogSourceReconciler marketplace.CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 
-					return errors.New("dummy error")
+					return integreatlyv1alpha1.PhaseFailed, errors.New("dummy error")
 				},
 			},
 			FakeClient: moqclient.NewSigsClientMoqWithScheme(scheme, &integreatlyv1alpha1.RHMI{
@@ -522,8 +522,8 @@ func TestReconciler_fullReconcile(t *testing.T) {
 			FakeClient:     fakeclient.NewFakeClientWithScheme(scheme, getFuseCr(syndesisv1beta1.SyndesisPhaseInstalled), ns, operatorNS, route, secret, test1User, rhmiDevelopersGroup, pullSecret, installation, operatorDeployment, croPostgres, croPostgresSecret),
 			FakeConfig:     basicConfigMock(),
 			FakeMPM: &marketplace.MarketplaceInterfaceMock{
-				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy operatorsv1alpha1.Approval, catalogSourceReconciler marketplace.CatalogSourceReconciler) error {
-					return nil
+				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy operatorsv1alpha1.Approval, catalogSourceReconciler marketplace.CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
+					return integreatlyv1alpha1.PhaseCompleted, nil
 				},
 				GetSubscriptionInstallPlansFunc: func(ctx context.Context, serverClient k8sclient.Client, subName string, ns string) (plans *operatorsv1alpha1.InstallPlanList, subscription *operatorsv1alpha1.Subscription, e error) {
 					return &operatorsv1alpha1.InstallPlanList{

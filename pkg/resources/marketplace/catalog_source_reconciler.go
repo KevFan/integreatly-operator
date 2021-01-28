@@ -2,11 +2,10 @@ package marketplace
 
 import (
 	"context"
-
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 )
 
 type CatalogSourceReconciler interface {
-	Reconcile(ctx context.Context) (reconcile.Result, error)
+	Reconcile(ctx context.Context) (integreatlyv1alpha1.StatusPhase, error)
 	CatalogSourceName() string
 }

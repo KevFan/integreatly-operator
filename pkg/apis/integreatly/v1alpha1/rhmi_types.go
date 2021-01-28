@@ -15,6 +15,7 @@ type StageName string
 var (
 	PhaseNone                   StatusPhase = ""
 	PhaseAccepted               StatusPhase = "accepted"
+	PhaseAwaitingOperatorSource StatusPhase = "awaiting operator source"
 	PhaseCreatingSubscription   StatusPhase = "creating subscription"
 	PhaseAwaitingOperator       StatusPhase = "awaiting operator"
 	PhaseAwaitingCloudResources StatusPhase = "awaiting cloud resources"

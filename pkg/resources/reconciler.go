@@ -195,10 +195,10 @@ func (r *Reconciler) ReconcilePullSecret(ctx context.Context, destSecretNamespac
 
 func (r *Reconciler) ReconcileSubscription(ctx context.Context, target marketplace.Target, operandNS []string, preUpgradeBackupExecutor backup.BackupExecutor, client k8sclient.Client, catalogSourceReconciler marketplace.CatalogSourceReconciler, log l.Logger) (integreatlyv1alpha1.StatusPhase, error) {
 	log.Infof("Reconciling subscription", l.Fields{"subscription": target.Pkg, "channel": marketplace.IntegreatlyChannel, "ns": target.Namespace})
-	err := r.mpm.InstallOperator(ctx, client, target, operandNS, operatorsv1alpha1.ApprovalManual, catalogSourceReconciler)
+	phase, err := r.mpm.InstallOperator(ctx, client, target, operandNS, operatorsv1alpha1.ApprovalManual, catalogSourceReconciler)
 
-	if err != nil && !k8serr.IsAlreadyExists(err) {
-		return integreatlyv1alpha1.PhaseFailed, fmt.Errorf("could not create subscription in namespace: %s: %w", target.Namespace, err)
+	if (err != nil && !k8serr.IsAlreadyExists(err)) || phase != integreatlyv1alpha1.PhaseCompleted {
+		return phase, fmt.Errorf("could not create subscription in namespace: %s: %w", target.Namespace, err)
 	}
 	ips, _, err := r.mpm.GetSubscriptionInstallPlans(ctx, client, target.Pkg, target.Namespace)
 	if err != nil {

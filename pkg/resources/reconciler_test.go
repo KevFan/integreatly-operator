@@ -88,9 +88,9 @@ func TestNewReconciler_ReconcileSubscription(t *testing.T) {
 		{
 			Name: "test reconcile subscription creates a new subscription  completes successfully ",
 			FakeMPM: &marketplace.MarketplaceInterfaceMock{
-				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy alpha1.Approval, catalgSourceReconciler marketplace.CatalogSourceReconciler) error {
+				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy alpha1.Approval, catalgSourceReconciler marketplace.CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 
-					return nil
+					return integreatlyv1alpha1.PhaseCompleted, nil
 				},
 				GetSubscriptionInstallPlansFunc: func(ctx context.Context, serverClient k8sclient.Client, subName string, ns string) (plans *alpha1.InstallPlanList, subscription *alpha1.Subscription, e error) {
 					return &alpha1.InstallPlanList{Items: []alpha1.InstallPlan{alpha1.InstallPlan{Status: alpha1.InstallPlanStatus{Phase: alpha1.InstallPlanPhaseComplete}}}}, &alpha1.Subscription{}, nil
@@ -112,9 +112,9 @@ func TestNewReconciler_ReconcileSubscription(t *testing.T) {
 			Name:   "test reconcile subscription recreates subscription when installation plan not found completes successfully ",
 			client: fakeclient.NewFakeClientWithScheme(scheme),
 			FakeMPM: &marketplace.MarketplaceInterfaceMock{
-				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy alpha1.Approval, catalgSourceReconciler marketplace.CatalogSourceReconciler) error {
+				InstallOperatorFunc: func(ctx context.Context, serverClient k8sclient.Client, t marketplace.Target, operatorGroupNamespaces []string, approvalStrategy alpha1.Approval, catalgSourceReconciler marketplace.CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 
-					return nil
+					return integreatlyv1alpha1.PhaseCompleted, nil
 				},
 				GetSubscriptionInstallPlansFunc: func(ctx context.Context, serverClient k8sclient.Client, subName string, ns string) (plans *alpha1.InstallPlanList, subscription *alpha1.Subscription, e error) {
 					return nil, &alpha1.Subscription{ObjectMeta: metav1.ObjectMeta{
@@ -139,7 +139,7 @@ func TestNewReconciler_ReconcileSubscription(t *testing.T) {
 				},
 			}),
 			SubscriptionName: "something",
-			ExpectedStatus:   integreatlyv1alpha1.PhaseFailed,
+			ExpectedStatus:   integreatlyv1alpha1.PhaseAwaitingOperatorSource,
 			FakeMPM:          marketplace.NewManager(),
 			Installation:     ownerInstall,
 			ExpectErr:        true,

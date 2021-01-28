@@ -5,6 +5,7 @@ package marketplace
 
 import (
 	"context"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sync"
@@ -23,7 +24,7 @@ var _ MarketplaceInterface = &MarketplaceInterfaceMock{}
 //             GetSubscriptionInstallPlansFunc: func(ctx context.Context, serverClient client.Client, subName string, ns string) (*v1alpha1.InstallPlanList, *v1alpha1.Subscription, error) {
 // 	               panic("mock out the GetSubscriptionInstallPlans method")
 //             },
-//             InstallOperatorFunc: func(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) error {
+//             InstallOperatorFunc: func(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 // 	               panic("mock out the InstallOperator method")
 //             },
 //         }
@@ -37,7 +38,7 @@ type MarketplaceInterfaceMock struct {
 	GetSubscriptionInstallPlansFunc func(ctx context.Context, serverClient client.Client, subName string, ns string) (*v1alpha1.InstallPlanList, *v1alpha1.Subscription, error)
 
 	// InstallOperatorFunc mocks the InstallOperator method.
-	InstallOperatorFunc func(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) error
+	InstallOperatorFunc func(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -116,7 +117,7 @@ func (mock *MarketplaceInterfaceMock) GetSubscriptionInstallPlansCalls() []struc
 }
 
 // InstallOperator calls InstallOperatorFunc.
-func (mock *MarketplaceInterfaceMock) InstallOperator(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) error {
+func (mock *MarketplaceInterfaceMock) InstallOperator(ctx context.Context, serverClient client.Client, t Target, operatorGroupNamespaces []string, approvalStrategy v1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 	if mock.InstallOperatorFunc == nil {
 		panic("MarketplaceInterfaceMock.InstallOperatorFunc: method is nil but MarketplaceInterface.InstallOperator was just called")
 	}

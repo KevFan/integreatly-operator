@@ -31,7 +31,7 @@ require (
 	github.com/integr8ly/keycloak-client v0.1.2
 	github.com/jstemmer/go-junit-report v0.9.1
 	github.com/keycloak/keycloak-operator v0.0.0-20201021091505-b576fa07b78a
-	github.com/matryer/moq v0.1.3
+	github.com/matryer/moq v0.1.4
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/openshift/api v3.9.1-0.20191031084152-11eee842dafd+incompatible

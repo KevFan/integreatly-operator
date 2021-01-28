@@ -3,6 +3,7 @@ package marketplace
 import (
 	"context"
 	"fmt"
+	integreatlyv1alpha1 "github.com/integr8ly/integreatly-operator/pkg/apis/integreatly/v1alpha1"
 	l "github.com/integr8ly/integreatly-operator/pkg/resources/logger"
 
 	v1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1"
@@ -24,7 +25,7 @@ var log = l.NewLoggerWithContext(l.Fields{l.ComponentLogContext: "marketplace"})
 
 //go:generate moq -out MarketplaceManager_moq.go . MarketplaceInterface
 type MarketplaceInterface interface {
-	InstallOperator(ctx context.Context, serverClient k8sclient.Client, t Target, operatorGroupNamespaces []string, approvalStrategy coreosv1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) error
+	InstallOperator(ctx context.Context, serverClient k8sclient.Client, t Target, operatorGroupNamespaces []string, approvalStrategy coreosv1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error)
 	GetSubscriptionInstallPlans(ctx context.Context, serverClient k8sclient.Client, subName, ns string) (*coreosv1alpha1.InstallPlanList, *coreosv1alpha1.Subscription, error)
 }
 
@@ -40,7 +41,7 @@ type Target struct {
 	Channel string
 }
 
-func (m *Manager) InstallOperator(ctx context.Context, serverClient k8sclient.Client, t Target, operatorGroupNamespaces []string, approvalStrategy coreosv1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) error {
+func (m *Manager) InstallOperator(ctx context.Context, serverClient k8sclient.Client, t Target, operatorGroupNamespaces []string, approvalStrategy coreosv1alpha1.Approval, catalogSourceReconciler CatalogSourceReconciler) (integreatlyv1alpha1.StatusPhase, error) {
 	sub := &coreosv1alpha1.Subscription{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.Namespace,
@@ -54,13 +55,11 @@ func (m *Manager) InstallOperator(ctx context.Context, serverClient k8sclient.Cl
 		CatalogSourceNamespace: t.Namespace,
 	}
 
-	res, err := catalogSourceReconciler.Reconcile(ctx)
-	if res.Requeue {
-		return fmt.Errorf("Requeue")
+	phase, err := catalogSourceReconciler.Reconcile(ctx)
+	if err != nil || phase != integreatlyv1alpha1.PhaseCompleted {
+		return phase, err
 	}
-	if err != nil {
-		return err
-	}
+
 	sub.Spec.CatalogSource = catalogSourceReconciler.CatalogSourceName()
 
 	//catalog source is ready create the other stuff
@@ -77,17 +76,17 @@ func (m *Manager) InstallOperator(ctx context.Context, serverClient k8sclient.Cl
 	err = serverClient.Create(ctx, og)
 	if err != nil && !k8serr.IsAlreadyExists(err) {
 		log.Error("error creating operator group", err)
-		return err
+		return integreatlyv1alpha1.PhaseFailed, err
 	}
 
 	log.Infof("Creating subscription in ns if it doesn't already exist", l.Fields{"ns": t.Namespace})
 	err = serverClient.Create(ctx, sub)
 	if err != nil && !k8serr.IsAlreadyExists(err) {
 		log.Error("error creating sub", err)
-		return err
+		return integreatlyv1alpha1.PhaseFailed, err
 	}
 
-	return nil
+	return integreatlyv1alpha1.PhaseCompleted, nil
 
 }
 

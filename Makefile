@@ -148,6 +148,9 @@ pkg/apis/integreatly/v1alpha1/zz_generated.deepcopy.go:	pkg/apis/integreatly/v1a
 .PHONY: code/gen
 code/gen: setup/moq deploy/crds/integreatly.org_rhmis_crd.yaml pkg/apis/integreatly/v1alpha1/zz_generated.deepcopy.go pkg/apis/integreatly/v1alpha1/zz_generated.openapi.go
 	@go generate ./...
+	# Manually resolve packages with the same name - https://github.com/matryer/moq/pull/141
+	@$(SED_INLINE) 's/\"github.com\/integr8ly\/integreatly-operator\/pkg\/apis\/integreatly\/v1alpha1\"/integreatlyv1alpha1 \"github.com\/integr8ly\/integreatly-operator\/pkg\/apis\/integreatly\/v1alpha1\"/g' pkg/resources/marketplace/MarketplaceManager_moq.go
+	@$(SED_INLINE) 's/v1alpha1.StatusPhase/integreatlyv1alpha1.StatusPhase/g' pkg/resources/marketplace/MarketplaceManager_moq.go
 
 .PHONY: code/check
 code/check:

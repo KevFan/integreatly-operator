@@ -669,6 +669,24 @@ var zyncQue = &appsv1.DeploymentConfig{
 	Status: appsv1.DeploymentConfigStatus{},
 }
 
+var catalogSource = &coreosv1alpha1.CatalogSource{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "rhmi-registry-cs",
+		Namespace: nsPrefix + defaultInstallationNamespace,
+	},
+	Status: coreosv1alpha1.CatalogSourceStatus{
+		Message:               "",
+		Reason:                "",
+		ConfigMapResource:     nil,
+		RegistryServiceStatus: nil,
+		GRPCConnectionState: &coreosv1alpha1.GRPCConnectionState{
+			Address:           "",
+			LastObservedState: "READY",
+			LastConnectTime:   metav1.Time{},
+		},
+		LatestImageRegistryPoll: nil,
+	}}
+
 func getSuccessfullTestPreReqs(integreatlyOperatorNamespace, threeScaleInstallationNamepsace string) []runtime.Object {
 	configManagerConfigMap.Namespace = integreatlyOperatorNamespace
 	s3BucketSecret.Namespace = integreatlyOperatorNamespace
@@ -693,6 +711,7 @@ func getSuccessfullTestPreReqs(integreatlyOperatorNamespace, threeScaleInstallat
 	zync.Namespace = threeScaleInstallationNamepsace
 	zyncDatabase.Namespace = threeScaleInstallationNamepsace
 	zyncQue.Namespace = threeScaleInstallationNamepsace
+	catalogSource.Namespace = threeScaleInstallationNamepsace + "-operator"
 
 	return []runtime.Object{
 		s3BucketSecret,
@@ -736,5 +755,6 @@ func getSuccessfullTestPreReqs(integreatlyOperatorNamespace, threeScaleInstallat
 		zync,
 		zyncDatabase,
 		zyncQue,
+		catalogSource,
 	}
 }
